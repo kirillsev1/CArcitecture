@@ -7,6 +7,13 @@ components_manager:
         fs-task-processor:            # Make a separate task processor for filesystem bound tasks.
             worker_threads: $worker-fs-threads
 
+        consumer-task-processor: # Task processor for listenting messages from topics
+            thread_name: consumer
+            worker_threads: 1     # Threads are shared between all consumers in program
+        producer-task-processor: # Task processor for handling message delivery reports
+            thread_name: producer
+            worker_threads: 4     # Threads are shared between all producers in program
+
     default_task_processor: main-task-processor
 
     components:                       # Configuring components that were registered via component_list
@@ -33,6 +40,26 @@ components_manager:
                     statement_timeout_ms: 500
 
         testsuite-support: {}
+        secdist:
+            provider: default-secdist-provider
+        default-secdist-provider:                        # Component that loads configuration of hosts and passwords
+            config: /service_template/configs/secure_data.json  # Values are supposed to be stored in this file
+            missing-ok: false                             # ... but if the file is missing it is still ok
+            environment-secrets-key: SECDIST_CONFIG      # ... values will be loaded from this environment value
+
+        kafka-consumer:                  # Kafka consumer component name must start with kafka-consumer
+            group_id: test-group         # Consumers group current consumer will join on start
+            topics:                      # List of topics consumer starts to listen
+                - send-photo-data
+            auto_offset_reset: smallest  # Strategy for reading topics without committed offsets
+            max_batch_size: 5            # Number of messages consumers waits until user-callback is called
+            security_protocol: PLAINTEXT # Broker connection settings
+
+        kafka-producer:                   # Kafka producer component name must start with kafka-producer
+            delivery_timeout: 10s         # Timeout for message delivery
+            queue_buffering_max: 100ms    # Time, producer waits before sending a message
+            enable_idempotence: true      # Whether to enable idempotence mode
+            security_protocol: PLAINTEXT  # Broker connection settings
 
         http-client:
             load-enabled: $is_testing
@@ -58,10 +85,22 @@ components_manager:
             method: GET,POST              # It will only reply to GET (HEAD) and POST requests.
             task_processor: main-task-processor  # Run it on CPU bound task processor
 
-        handler-user-create:
+        handler-user-register:
             path: /user
             method: POST
             task_processor: main-task-processor
+
+        handler-user-info:
+            path: /user_info
+            method: POST
+            task_processor: main-task-processor
+
+        producer-handler:
+            path: /produce                      # Registering handler by URL '/produce'.
+            method: POST                        # POST requests only.
+            task_processor: main-task-processor # Run it on CPU bound task processor
+
+        consumer-handler:
 
         postgres-db:
             dbconnection: $dbconnection

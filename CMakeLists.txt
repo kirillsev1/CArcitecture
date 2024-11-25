@@ -3,10 +3,12 @@ project(service_template CXX)
 
 
 # Adding userver dependency
-find_package(userver COMPONENTS core postgresql QUIET)
+find_package(userver COMPONENTS core postgresql kafka grpc QUIET)
 if(NOT userver_FOUND)  # Fallback to subdirectory usage
     # Enable userver libraries that are needed in this project
     set(USERVER_FEATURE_POSTGRESQL ON CACHE BOOL "" FORCE)
+    set(USERVER_FEATURE_KAFKA ON CACHE BOOL "" FORCE)
+    set(USERVER_FEATURE_GRPC ON CACHE BOOL "" FORCE)
 
     # Compatibility mode: some systems don't support these features
     set(USERVER_FEATURE_CRYPTOPP_BLAKE2 OFF CACHE BOOL "" FORCE)
@@ -21,18 +23,41 @@ if(NOT userver_FOUND)  # Fallback to subdirectory usage
     endif()
 endif()
 
+add_subdirectory(third_party/cpp-jwt)
+
 userver_setup_environment()
 
 
 # Common sources
 add_library(${PROJECT_NAME}_objs OBJECT
-    src/api/v1/hello/hello.hpp
-    src/api/v1/hello/hello.cpp
-    src/api/v1/user/registre.hpp
-    src/api/v1/user/registre.cpp
+        src/api/v1/hello/hello.hpp
+        src/api/v1/hello/hello.cpp
+        src/api/v1/user/register.hpp
+        src/api/v1/user/register.cpp
+        src/api/v1/user/info.cpp
+        src/api/v1/user/info.hpp
+        src/api/v1/user/login.cpp
+        src/api/v1/user/login.hpp
+        src/dto/user.cpp
+        src/dto/user.hpp
+        src/db/types.hpp
+        src/models/user.cpp
+        src/models/user.hpp
+        src/utils/jwt.cpp
+        src/utils/jwt.hpp
+        src/api/v1/photo/load.cpp
+        src/api/v1/photo/load.hpp
+        src/api/v1/photo/produce.cpp
+        src/api/v1/photo/produce.hpp
+        src/api/v1/photo/consume.cpp
+        src/api/v1/photo/consume.hpp
+        src/api/v1/photo/consumer.cpp
+        src/api/v1/photo/consumer.hpp
 )
-target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver::core)
-target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver::postgresql)
+include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver::core userver::postgresql userver::kafka userver::grpc)
+target_include_directories(${PROJECT_NAME}_objs PUBLIC cpp-jwt)
+target_link_libraries(${PROJECT_NAME}_objs PUBLIC cpp-jwt)
 
 # The Service
 add_executable(${PROJECT_NAME} src/main.cpp)
@@ -69,6 +94,8 @@ if(DEFINED ENV{PREFIX})
   file(TO_CMAKE_PATH "$ENV{PREFIX}" PREFIX_PATH)
   set(CMAKE_INSTALL_PREFIX "${PREFIX_PATH}")
 endif()
+
+set(CONFIG_JWT ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}/jwt_config.json)
 
 file(GLOB CONFIGS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.yaml ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.json)
 
