@@ -59,6 +59,10 @@ target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver::core userver::postgre
 target_include_directories(${PROJECT_NAME}_objs PUBLIC cpp-jwt)
 target_link_libraries(${PROJECT_NAME}_objs PUBLIC cpp-jwt)
 
+# Create a proto library with userver extensions
+userver_add_grpc_library(${PROJECT_NAME}-proto PROTOS service_example.proto)
+target_link_libraries(${PROJECT_NAME}_objs PUBLIC ${PROJECT_NAME}-proto)
+
 # The Service
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_objs)

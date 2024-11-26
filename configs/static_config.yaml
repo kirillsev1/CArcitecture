@@ -14,6 +14,10 @@ components_manager:
             thread_name: producer
             worker_threads: 4     # Threads are shared between all producers in program
 
+        grpc-blocking-task-processor: # For blocking gRPC channel creation
+            worker_threads: 2
+            thread_name: grpc-worker
+
     default_task_processor: main-task-processor
 
     components:                       # Configuring components that were registered via component_list
@@ -109,3 +113,16 @@ components_manager:
             dns_resolver: async
             sync-start: false
             connlimit_mode: manual
+
+        grpc-client-common:
+            # The TaskProcessor for blocking connection initiation
+            blocking-task-processor: grpc-blocking-task-processor
+
+        # Creates gRPC clients
+        grpc-client-factory:
+            # The list of gRPC client middleware components to use
+            middlewares: [ ]
+
+            # Optional channel parameters for gRPC Core
+            # https://grpc.github.io/grpc/core/group__grpc__arg__keys.html
+            channel-args: { }

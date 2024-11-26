@@ -18,6 +18,8 @@
 
 #include <userver/kafka/producer_component.hpp>
 #include <userver/kafka/consumer_component.hpp>
+#include <userver/ugrpc/client/common_component.hpp>
+#include <userver/ugrpc/client/client_factory_component.hpp>
 
 int main(const int argc, char* argv[]) {
   auto component_list = userver::components::MinimalServerComponentList()
@@ -33,6 +35,8 @@ int main(const int argc, char* argv[]) {
                             .Append<userver::clients::dns::Component>()
                             .Append<userver::components::Secdist>()
                             .Append<userver::components::DefaultSecdistProvider>()
+                            .Append<ugrpc::client::CommonComponent>()
+                            .Append<ugrpc::client::ClientFactoryComponent>()
   ;
 
   service_template::AppendHello(component_list);

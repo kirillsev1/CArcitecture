@@ -1,7 +1,7 @@
 #include "load.hpp"
  
 #include <userver/kafka/producer_component.hpp>
- 
+
 #include <userver/components/component_config.hpp>
 #include <userver/components/component_context.hpp>
  
@@ -12,13 +12,12 @@
  
 namespace kafka_produce {
  
-RequestMessage Parse(const formats::json::Value& doc, formats::parse::To<RequestMessage>) {
-    RequestMessage request_message;
-    request_message.topic = doc["topic"].As<std::string>();
-    request_message.key = doc["key"].As<std::string>();
-    request_message.payload = doc["payload"].As<std::string>();
- 
-    return request_message;
+service::example::api::PhotoMetaRequest parse(const formats::json::Value& doc) {
+  service::example::api::PhotoMetaRequest request_message;
+  request_message.set_key(doc["key"].As<std::string>());
+  request_message.set_filename(doc["payload"]["filename"].As<std::string>());
+  request_message.set_im_size(doc["payload"]["im_size"].As<std::int32_t>());
+  return request_message;
 }
  
 namespace {
@@ -55,8 +54,8 @@ formats::json::Value ProducerHandler::HandleRequestJsonThrow(
         return formats::json::FromString(kErrorMembersNotSet);
     }
  
-    const auto message = request_json.As<RequestMessage>();
-    switch (Produce(producer_, message)) {
+    const auto message = parse(request_json);
+    switch (Produce(producer_, message, request_json["topic"].As<std::string>())) {
         case SendStatus::kSuccess:
             return formats::json::MakeObject("message", "Message send successfully");
         case SendStatus::kErrorRetryable:

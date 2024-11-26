@@ -10,9 +10,10 @@
 
 
 namespace kafka_consume {
-ConsumerHandler::ConsumerHandler(const components::ComponentConfig& config, const components::ComponentContext& context)
-    : components::ComponentBase{config, context},
-      consumer_{context.FindComponent<kafka::ConsumerComponent>().GetConsumer()} {
+ConsumerHandler::ConsumerHandler(const components::ComponentConfig& config,
+                                 const components::ComponentContext& context)
+  : components::ComponentBase{config, context},
+    consumer_{context.FindComponent<kafka::ConsumerComponent>().GetConsumer()} {
   consumer_.Start([this](kafka::MessageBatchView messages) {
     auto result_json = formats::json::ToString(Consume(messages));
     std::cout << result_json << std::endl;

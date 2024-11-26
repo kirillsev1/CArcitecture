@@ -32,10 +32,10 @@ services:
       - ./tests/run_as_user.sh
     depends_on:
       - postgres
-      - kafka
       - zookeeper
       - kafka-ui
       - kafka-topics-generator
+      - kafka
     networks:
       - service
 

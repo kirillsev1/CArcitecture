@@ -1,15 +1,9 @@
 syntax = "proto3";
 
-package services.api;
+package service.example.api;
 
-service HelloService {
-	rpc SayHello(HelloRequest) returns(HelloResponse) {}
-}
-
-message HelloRequest {
-	string name = 1;
-}
-
-message HelloResponse {
-	string text = 1;
+message PhotoMetaRequest {
+	string key = 1;
+	string filename = 2;
+	int32 im_size = 3;
 }
